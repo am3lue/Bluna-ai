@@ -27,7 +27,7 @@ git clone https://github.com/am3lue/bluna-ai.git
 cd bluna-ai
 ```
 3. Run the initialization script:
-    - Windows: Run `init.bat` as administrator (Downloads Julia from https://julialang-s3.julialang.org/bin/winnt/x64/1.9/julia-1.9.3-win64.exe)
+    - Windows: Run `init.bat` as administrator 
     - Linux/macOS: Run `./init.sh`
 
 ### Manual Installation
