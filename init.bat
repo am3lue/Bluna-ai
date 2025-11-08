@@ -11,7 +11,22 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
-:: Create a temporary directory for downloads
+:: Create program directory
+set "INSTALL_DIR=%USERPROFILE%\Bluna-ai"
+if not exist "%INSTALL_DIR%" (
+    mkdir "%INSTALL_DIR%"
+    if %errorlevel% neq 0 (
+        echo Error: Failed to create program directory
+        pause
+        exit /b 1
+    )
+)
+
+:: Copy program files
+echo Copying program files...
+xcopy /E /I /Y "%~dp0*" "%INSTALL_DIR%"
+
+:: Create temporary directory for downloads
 if exist "%TEMP%\installer_temp" rmdir /s /q "%TEMP%\installer_temp"
 mkdir "%TEMP%\installer_temp" || (
     echo Error: Failed to create temporary directory
@@ -71,6 +86,16 @@ if %errorlevel% neq 0 (
     goto :cleanup
 )
 
+:: Create desktop shortcut
+echo Creating desktop shortcut...
+set "SHORTCUT=%USERPROFILE%\Desktop\Bluna-AI.bat"
+(
+echo @echo off
+echo cd "%INSTALL_DIR%"
+echo julia main.jl
+echo pause
+) > "%SHORTCUT%"
+
 :cleanup
 :: Clean up
 cd ..
@@ -78,6 +103,7 @@ rmdir /s /q "%TEMP%\installer_temp"
 
 if %errorlevel% equ 0 (
     echo Installation complete!
+    echo A shortcut has been created on your desktop.
     echo Please restart your terminal to use Julia and Ollama.
 ) else (
     echo Installation failed!

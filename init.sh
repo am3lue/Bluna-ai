@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# Define installation directory and desktop shortcut path
+INSTALL_DIR="$HOME/.bluna-ai"
+DESKTOP_DIR="$HOME/Desktop"
+SHORTCUT_PATH="$DESKTOP_DIR/Bluna-AI.desktop"
+
 # Function to detect package manager
 detect_package_manager() {
     if command -v apt &> /dev/null; then
@@ -51,6 +56,28 @@ if ! command -v dialog &> /dev/null; then
     install_dialog
 fi
 
-# Additional code can be added here if needed
-# For example, you might want to add a message indicating successful installation
-echo "Dialog package installed successfully."
+# Create installation directory if it doesn't exist
+mkdir -p "$INSTALL_DIR"
+
+# Copy program files to installation directory
+cp -r "$(dirname "$0")"/* "$INSTALL_DIR/"
+
+# Create desktop shortcut
+cat > "$SHORTCUT_PATH" << EOL
+[Desktop Entry]
+Name=Bluna AI
+Comment=Launch Bluna AI
+Exec=julia "$INSTALL_DIR/main.jl"
+Terminal=true
+Type=Application
+Categories=Application;
+Icon=$INSTALL_DIR/icon.png
+EOL
+
+# Make the desktop shortcut executable
+chmod +x "$SHORTCUT_PATH"
+
+# Run the program for the first time
+julia "$INSTALL_DIR/main.jl"
+
+echo "Installation completed! You can now launch Bluna AI from your desktop."

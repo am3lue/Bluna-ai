@@ -73,10 +73,10 @@ function bluna_intro()
 end
 
 # Run intro
-bluna_intro()
+# bluna_intro()
 
 #including choices.jl to get user preferences
-include("choices.jl")
+include("instruction_builder.jl")
 genre, language = user_choices()
 
 #saving choices to the choices.txt file
