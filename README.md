@@ -20,57 +20,36 @@ It's designed for **beginners and developers** who want a **customizable, privat
 
 ### Automatic Installation
 
-### 1. Install Ollama
-Download and install Ollama for your OS:
-- [Ollama for Windows](https://ollama.ai/download)
-- [Ollama for macOS](https://ollama.ai/download)
-- [Ollama for Linux](https://ollama.ai/download)
-
-### 2. Pull the Phi-3-mini model
-```bash
-ollama pull phi3
-```
-
-### 3. Install Julia and dependencies
-
-Make sure you have Julia installed, then run:
-
-```julia
-using Pkg
-Pkg.add(["HTTP", "JSON3", "Crayons"])
-```
-
-### 4. Clone this repository
-
+1. Download and install [Ollama](https://github.com/ollama/ollama/releases/latest) for your OS
+2. Clone the repository:
 ```bash
 git clone https://github.com/am3lue/bluna-ai.git
 cd bluna-ai
 ```
-
-### 5. Run Bluna AI
-
-```bash
-julia bluna.jl
-```
+3. Run the initialization script:
+    - Windows: Run `init.bat` as administrator (Downloads Julia from https://julialang-s3.julialang.org/bin/winnt/x64/1.9/julia-1.9.3-win64.exe)
+    - Linux/macOS: Run `./init.sh`
 
 ### Manual Installation
 
-1. Download and install Julia from [julialang.org](https://julialang.org/downloads/)
+1. Download and install Julia:
+     - Windows: [Julia 1.9.3 (64-bit)](https://julialang-s3.julialang.org/bin/winnt/x64/1.9/julia-1.9.3-win64.exe)
+     - Linux/macOS: [julialang.org](https://julialang.org/downloads/)
 2. Install Ollama manually:
-    - Linux: `curl -fsSL https://ollama.ai/install.sh | sh`
-    - macOS: Download the .dmg file and follow installation steps
-    - Windows: Download and run the installer
+     - Linux: `curl -fsSL https://ollama.ai/install.sh | sh`
+     - macOS: [Download .dmg](https://github.com/ollama/ollama/releases/latest)
+     - Windows: [Download installer](https://github.com/ollama/ollama/releases/latest)
 3. Download this repository as ZIP and extract
 4. Open Julia REPL and install packages:
-    ```julia
-    import Pkg
-    Pkg.add("HTTP")
-    Pkg.add("JSON3")
-    Pkg.add("Crayons")
-    ```
+     ```julia
+     import Pkg
+     Pkg.add("HTTP")
+     Pkg.add("JSON3")
+     Pkg.add("Crayons")
+     ```
 5. Navigate to extracted folder and run:
-    ```julia
-    include("bluna.jl")
-    ```
+     ```julia
+     include("bluna.jl")
+     ```
 
 ---
