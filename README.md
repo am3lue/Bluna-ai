@@ -1,7 +1,7 @@
 <h1 align="center"> 🌙 Bluna AI </h1>
 
 **Bluna AI** is a lightweight, locally hosted **terminal-based programming companion** powered by the **Phi-3-mini (3.8B)** model via Ollama.  
-It’s designed for **beginners and developers** who want a **customizable, private AI tutor** that helps them learn, practice, and stay consistent in programming.
+It's designed for **beginners and developers** who want a **customizable, private AI tutor** that helps them learn, practice, and stay consistent in programming.
 
 ---
 
@@ -18,6 +18,8 @@ It’s designed for **beginners and developers** who want a **customizable, priv
 
 ## 📦 Installation
 
+### Automatic Installation
+
 ### 1. Install Ollama
 Download and install Ollama for your OS:
 - [Ollama for Windows](https://ollama.ai/download)
@@ -27,7 +29,7 @@ Download and install Ollama for your OS:
 ### 2. Pull the Phi-3-mini model
 ```bash
 ollama pull phi3
-````
+```
 
 ### 3. Install Julia and dependencies
 
@@ -51,69 +53,24 @@ cd bluna-ai
 julia bluna.jl
 ```
 
----
+### Manual Installation
 
-## 🧩 Project Structure
-
-```
-bluna-ai/
-│
-├── bluna.jl                  # Main program file
-├── prompts/                  # Default language prompts
-│   ├── julia_general.txt
-│   ├── python_algorithms.txt
-│   └── ...
-├── user_prompts.json         # Custom user-defined prompt settings
-├── roadmap.pdf               # 12-hour roadmap plan
-└── README.md
-```
-
----
-
-## ⚙️ How It Works
-
-1. Detects your OS, checks Ollama and firewall setup.
-2. Lets you choose your **genre** (Basics / DSA) and **language**.
-3. Loads the correct base prompt and merges user preferences.
-4. Sends prompt to **Phi-3-mini** via the local Ollama API.
-5. Streams the model’s response interactively in your terminal.
+1. Download and install Julia from [julialang.org](https://julialang.org/downloads/)
+2. Install Ollama manually:
+    - Linux: `curl -fsSL https://ollama.ai/install.sh | sh`
+    - macOS: Download the .dmg file and follow installation steps
+    - Windows: Download and run the installer
+3. Download this repository as ZIP and extract
+4. Open Julia REPL and install packages:
+    ```julia
+    import Pkg
+    Pkg.add("HTTP")
+    Pkg.add("JSON3")
+    Pkg.add("Crayons")
+    ```
+5. Navigate to extracted folder and run:
+    ```julia
+    include("bluna.jl")
+    ```
 
 ---
-
-## 💡 Future Plans
-
-* 🧭 **Progress Tracker** – Monitor improvement across sessions.
-* 🔔 **Reminders & Notifications** – Daily challenge reminders.
-* 💬 **Offline Discussion Threads** – Local chat-style Q&A archive.
-* 🧮 **Performance Graphs** – Visual representation of user growth.
-
----
-
-## 🧑‍💻 About
-
-**Bluna AI** is developed by [@am3lue](https://github.com/am3lue).
-It’s built to **make programming education interactive, personal, and offline-friendly**, empowering beginners to grow at their own pace.
-
----
-
-## 🪶 License
-
-This project is licensed under the **MIT License** — free to use, modify, and share.
-
----
-
-> “Your personal coding moonlight — guiding you through the dark lines of code.” 🌙💙
-
-
----
-
-## 🧾 Project Description (for GitHub or Portfolio)
-
-> **Bluna AI** is a locally hosted, terminal-based programming assistant built with Julia and powered by the Phi-3-mini model using Ollama.  
-It helps programmers — from beginners to experienced devs — learn, debug, and practice coding more effectively.  
-With its customizable prompts, practice reminders, and minimalist TUI, Bluna AI provides a private, distraction-free learning experience that adapts to each user’s style.  
-It’s open-source, lightweight, and built to make programming education smarter and more human.
-
----
-
-
