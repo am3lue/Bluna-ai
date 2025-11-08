@@ -16,7 +16,7 @@ function spinner(task::String; duration=2.0)
     spinner_chars = ['|', '/', '-', '\\']
     print(Crayon(foreground=:light_cyan, bold=true), task, " ")
     t0 = time()
-a    while (time() - t0) < duration
+    while (time() - t0) < duration
         for c in spinner_chars
             print("\b", c)
             flush(stdout)
@@ -79,10 +79,10 @@ bluna_intro()
 include("choices.jl")
 genre, language = user_choices()
 
-#saving choices to the choices.toml file
-using TOML
+#saving choices to the choices.txt file
 
 choices = Dict("genre" => genre, "language" => language)
-open("choices.toml", "w") do f
-    write(f, TOML.print(choices))
+open("choices.txt", "w") do f
+    write(f, "genre = $genre\n")
+    write(f, "language = $language\n")
 end
