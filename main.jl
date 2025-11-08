@@ -1,11 +1,9 @@
-include("setup.jl")
+# Main file to run the Bluna ai program
 include("intro.jl")
-include("choices.jl")
-include("preferences.jl")
-include("instruction_builder.jl")
 include("ollama_handler.jl")
+include("instruction_builder.jl")
 
-
+# Run intro
 bluna_intro()
 
 genre, language = user_choices()

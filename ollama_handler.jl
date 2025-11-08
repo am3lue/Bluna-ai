@@ -31,7 +31,7 @@ function build_prompt(user_message::String)
     Focus: $(get(data["user_customization"], "focus", "general"))
     Difficulty: $(get(data["user_customization"], "difficulty", "normal"))
 
-    ${data["final_instruction"]}
+    $(data["final_instruction"])
     """
 
     prompt = """

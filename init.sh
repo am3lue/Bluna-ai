@@ -77,7 +77,10 @@ EOL
 # Make the desktop shortcut executable
 chmod +x "$SHORTCUT_PATH"
 
+# Pull phi3 model
+ollama pull phi3
+
 # Run the program for the first time
-julia "$INSTALL_DIR/main.jl"
+julia "$INSTALL_DIR/setup.jl"
 
 echo "Installation completed! You can now launch Bluna AI from your desktop."

@@ -78,11 +78,11 @@ if %errorlevel% neq 0 (
 echo Waiting for Ollama service to start...
 timeout /t 10 /nobreak
 
-:: Pull phi-3-mini model
-echo Downloading phi-3-mini model...
-ollama pull phi-3-mini
+:: Pull phi3 model
+echo Downloading phi3 model...
+ollama pull phi3
 if %errorlevel% neq 0 (
-    echo Error: Failed to download phi-3-mini model
+    echo Error: Failed to download phi3 model
     goto :cleanup
 )
 
@@ -92,7 +92,12 @@ set "SHORTCUT=%USERPROFILE%\Desktop\Bluna-AI.bat"
 (
 echo @echo off
 echo cd "%INSTALL_DIR%"
-echo julia main.jl
+if not exist "%INSTALL_DIR%\setup_done.txt" (
+    echo julia setup.jl
+    echo. > "%INSTALL_DIR%\setup_done.txt"
+) else (
+    echo julia main.jl
+)
 echo pause
 ) > "%SHORTCUT%"
 
