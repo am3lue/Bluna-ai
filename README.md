@@ -1,70 +1,78 @@
 <img src="./images/Bluna-AI-logo.png" alt="Bluna AI Logo" width="200" height="200" style="display: block; margin: auto; border-radius: 50%;"/>
 
 
-**Bluna AI** is a lightweight, locally hosted **terminal-based programming companion** powered by the **Phi-3-mini (3.8B)** model via Ollama.  
-It's designed for **beginners and developers** who want a **customizable, private AI tutor** that helps them learn, practice, and stay consistent in programming.
+**Bluna AI** is a lightweight, fully local **terminal-based coding assistant** powered by the **Phi-3-mini (3.8B)** model through Ollama.  
+Perfect for **beginners and seasoned developers** who want a **private, customizable AI mentor** to guide them, help them practice, and build consistent coding habits.
 
 ---
 
-## 🚀 Features
+## 🚀 Key Features
 
-- 💻 **Multi-language Tutor** – Supports Julia, Python, C/C++, Rust, Go, PHP, SQL, Web Development, and more.
-- 🧠 **Customizable AI Personality** – Tailor how Bluna responds to match your tone, goals, and coding journey.
-- 🧩 **Daily Practice Challenges** – Optional reminders that keep your skills sharp.
-- 🪶 **Lightweight & Private** – Runs fully offline with Ollama (no external APIs).
-- 🧰 **TUI Interface** – Clean, Carbon-Blue themed terminal UI for easy interaction.
-- ⚙️ **Cross-platform Support** – Works on Windows, macOS, and Linux.
+- 💻 **Multi-Language Support** – Works with Julia, Python, C/C++, Rust, Go, PHP, SQL, Web Development, and many others.
+- 🧠 **Personalized AI Behavior** – Adjust Bluna’s tone, teaching style, and focus to fitily match your learning goals.
+- 🧩 **Daily Coding Challenges** – Optional gentle reminders with fresh exercises to keep your skills growing.
+- 🪶 **Completely Private & Lightweight** – Runs 100% offline using Ollama (zero data leaves your machine).
+- 🧰 **Beautiful TUI** – Intuitive, Carbon-Blue themed terminal interface for a smooth experience.
+- ⚙️ **Cross-Platform** – Fully compatible with Windows, macOS, and Linux.
 
 ---
 
 ## 📦 Installation
 
-### Automatic Installation
+### Automatic Setup (Recommended)
 
-1. Download and install [Ollama](https://github.com/ollama/ollama/releases/latest) for your OS
+1. Download and install [Ollama](https://github.com/ollama/ollama/releases/latest) for your operating system.
 2. Clone the repository:
 ```bash
 git clone https://github.com/am3lue/bluna-ai.git
 cd bluna-ai
 ```
-3. Run the initialization script:
-    - Windows: Run `init.bat` as administrator 
-    - Linux/macOS: Run `./init.sh`
+3. Run the setup script:
+   - **Windows**: Double-click `init.bat` (run as administrator)
+   - **Linux/macOS**: `./init.sh`
 
-### Manual Installation
+### Manual Setup
 
-1. Download and install Julia:
-     - Windows: [Julia 1.9.3 (64-bit)](https://julialang-s3.julialang.org/bin/winnt/x64/1.9/julia-1.9.3-win64.exe)
-     - Linux/macOS: [julialang.org](https://julialang.org/downloads/)
-2. Install Ollama manually:
-     - Linux: `curl -fsSL https://ollama.ai/install.sh | sh`
-     - macOS: [Download .dmg](https://github.com/ollama/ollama/releases/latest)
-     - Windows: [Download installer](https://github.com/ollama/ollama/releases/latest)
-3. Download this repository as ZIP and extract
-4. Open Julia REPL and install packages:
-     ```julia
-     import Pkg
-     Pkg.add("HTTP")
-     Pkg.add("JSON3")
-     Pkg.add("Crayons")
-     ```
-5. Navigate to extracted folder and run:
-     ```julia
-     include("bluna.jl")
-     ```
+1. Install Julia:
+   - Windows: [Julia 1.9.3 (64-bit)](https://julialang-s3.julialang.org/bin/winnt/x64/1.9/julia-1.9.3-win64.exe)
+   - Linux/macOS: [julialang.org](https://julialang.org/downloads/)
+2. Install Ollama:
+   - Linux: `curl -fsSL https://ollama.ai/install.sh | sh`
+   - macOS: [Download .dmg](https://github.com/ollama/ollama/releases/latest)
+   - Windows: [Download installer](https://github.com/ollama/ollama/releases/latest)
+3. Download this repo as ZIP and extract it.
+4. Open Julia REPL and install required packages:
+```julia
+import Pkg
+Pkg.add("HTTP")
+Pkg.add("JSON3")
+Pkg.add("Crayons")
+```
+5. Go to the extracted folder and launch Bluna:
+```julia
+include("bluna.jl")
+```
 
----
+### Resetting Bluna
 
-## 🤝 Contributors
-
-We are grateful for the contributions of our dedicated team members who have helped bring Bluna AI to life:
-- **[am3lue](https://github.com/am3lue)** (Francis Masanja) - Lead Developer
-- **[emmatiko](https://github.com/emma7iko)** (Emmanuel Matiko) - Project Manager
-- **[Minza](https://github.com/Minzaaa)** (Minza Blue) - Debugging & QA
-- **[ayryn](https://github.com/irynsy811-cyber)** (Ireen Sebastian) - AI Specialist
-
-Their expertise and commitment have been invaluable in creating a robust and user-friendly programming companion.
+To start fresh (clear settings, history, etc.), run the reset script from the project folder:
+```julia
+include("reset.jl")
+```
 
 ---
 
-For more information, updates, and community discussions, feel free to check out our [GitHub repository](https://github.com/am3lue/bluna-ai) and join our community!
+## 🤝 Our Amazing Contributors
+
+A huge thank you to the talented team that made Bluna AI possible:
+
+- **[am3lue](https://github.com/am3lue)** (Francis Masanja) – Lead Developer  
+- **[emmatiko](https://github.com/emma7iko)** (Emmanuel Matiko) – Project Manager  
+- **[Minza](https://github.com/Minzaaa)** (Minza Blue) – Debugging & Quality Assurance  
+- **[ayryn](https://github.com/irynsy811-cyber)** (Ireen Sebastian) – AI Specialist  
+
+Their passion and expertise turned this idea into a powerful, friendly learning companion.
+
+---
+
+For the latest updates, source code, and community chat, visit our [GitHub repository](https://github.com/am3lue/bluna-ai). We’d love to see you there! 🚀
