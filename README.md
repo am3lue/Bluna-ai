@@ -58,9 +58,10 @@ cd bluna-ai
 ## 🤝 Contributors
 
 We are grateful for the contributions of our dedicated team members who have helped bring Bluna AI to life:
-- **[Blue-Francis](https://github.com/am3lue)** (Francis Masanja) - Lead Developer and Project Manager
-- **[Minza ](https://github.com/Minzaaa)** (Minza Blue) - UI/UX Designer and Frontend Developer
-- **[Ireen ](https://github.com/ayren)** (Ireen Sebastian) - Backend Developer and AI Specialist
+- **[am3lue](https://github.com/am3lue)** (Francis Masanja) - Lead Developer
+- **[emmatiko](https://github.com/emmatiko)** (Emmanuel Matiko) - Project Manager
+- **[Minza](https://github.com/Minzaaa)** (Minza Blue) - Debugging & QA
+- **[ayryn](https://github.com/irynsy811-cyber)** (Ireen Sebastian) - AI Specialist
 
 Their expertise and commitment have been invaluable in creating a robust and user-friendly programming companion.
 
