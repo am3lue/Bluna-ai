@@ -1,2 +1,2 @@
 genre = General Basics
-language = Python
+language = Go
