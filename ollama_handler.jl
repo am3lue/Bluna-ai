@@ -6,8 +6,9 @@ FINAL_FILE = "prompts/final_instructions.json"
 # 1. Load the final instruction JSON
 # ─────────────────────────────────────────────
 function load_final_instructions()
-    if !isfile(FINAL_FILE)
+    while !isfile(FINAL_FILE)
         error("❌ No final_instructions.json found. Please run the builder first.")
+        include("instruction_builder.jl")
     end
     return JSON.parsefile(FINAL_FILE)
 end
@@ -19,20 +20,31 @@ function build_prompt(user_message::String)
     data = load_final_instructions()
 
     sys = """
-    SYSTEM INSTRUCTION:
-    $(data["base_prompt"])
+        $(data["base_prompt"])
 
-    Tone: $(data["general_rules"]["tone"])
-    Format: $(data["general_rules"]["format"])
-    Never do: $(join(data["general_rules"]["never"], ", "))
+        💬 Tone: $(data["general_rules"]["tone"])
+        🧱 Format: $(data["general_rules"]["format"])
+        🚫 Never do: $(join(data["general_rules"]["never"], ",\n"))
 
-    User Preferences:
-    Style: $(get(data["user_customization"], "preferred_style", "neutral"))
-    Focus: $(get(data["user_customization"], "focus", "general"))
-    Difficulty: $(get(data["user_customization"], "difficulty", "normal"))
+        🎨 User Preferences:
+        • Style → $(get(data["user_customization"], "preferred_style", "neutral"))
+        • Focus → $(get(data["user_customization"], "focus", "general"))
+        • Difficulty → $(get(data["user_customization"], "difficulty", "normal"))
 
-    $(data["final_instruction"])
-    """
+        💻 Language Context:
+        $(data["language_prompt"])
+
+        📘 Focus Area:
+        $(data["genre_prompt"])
+
+        ✨ Final Instruction:
+        $(data["final_instruction"])
+
+        🔹 Remember:
+        You are Bluna AI — a calm, intelligent, and adaptive programming companion. 
+        Your responses must be clear, step-by-step, and aligned with the user's selected preferences.
+"""
+
 
     prompt = """
     $sys
