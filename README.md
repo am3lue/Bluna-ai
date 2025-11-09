@@ -59,7 +59,7 @@ cd bluna-ai
 
 We are grateful for the contributions of our dedicated team members who have helped bring Bluna AI to life:
 - **[am3lue](https://github.com/am3lue)** (Francis Masanja) - Lead Developer
-- **[emmatiko](https://github.com/emmatiko)** (Emmanuel Matiko) - Project Manager
+- **[emmatiko](https://github.com/emma7iko)** (Emmanuel Matiko) - Project Manager
 - **[Minza](https://github.com/Minzaaa)** (Minza Blue) - Debugging & QA
 - **[ayryn](https://github.com/irynsy811-cyber)** (Ireen Sebastian) - AI Specialist
 
