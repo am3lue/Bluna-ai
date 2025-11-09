@@ -68,7 +68,7 @@ A huge thank you to the talented team that made Bluna AI possible:
 
 - **[am3lue](https://github.com/am3lue)** (Francis Masanja) – Lead Developer  
 - **[emmatiko](https://github.com/emma7iko)** (Emmanuel Matiko) – Project Manager  
-- **[Minza](https://github.com/Minzaaa)** (Minza Blue) – Debugging & Quality Assurance  
+- **[Minza](https://github.com/minzaaa19)** (Minza Blue) – Debugging & Quality Assurance  
 - **[ayryn](https://github.com/irynsy811-cyber)** (Ireen Sebastian) – AI Specialist  
 
 Their passion and expertise turned this idea into a powerful, friendly learning companion.
