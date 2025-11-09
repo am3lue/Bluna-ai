@@ -1,4 +1,5 @@
-<h1 align="center"> 🌙 Bluna AI </h1>
+<img src="./images/Bluna-AI-logo.png" alt="Bluna AI Logo" width="200" height="200" style="display: block; margin: auto; border-radius: 50%;"/>
+
 
 **Bluna AI** is a lightweight, locally hosted **terminal-based programming companion** powered by the **Phi-3-mini (3.8B)** model via Ollama.  
 It's designed for **beginners and developers** who want a **customizable, private AI tutor** that helps them learn, practice, and stay consistent in programming.
