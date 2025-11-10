@@ -1,4 +1,4 @@
-<img src="./images/Bluna-AI-logo.png" alt="Bluna AI Logo" width="200" height="200" style="display: block; margin: auto; border-radius: 50%;"/>
+<img src="./images/Bluna-AI-logo.png" alt="Bluna AI Logo" width="200" height="200" style="display: block; margin: auto; border-radius: 50%;" align="center"/>
 
 
 **Bluna AI** is a lightweight, fully local **terminal-based coding assistant** powered by the **Phi-3-mini (3.8B)** model through Ollama.  
