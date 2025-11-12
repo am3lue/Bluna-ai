@@ -60,6 +60,21 @@ if %errorlevel% neq 0 (
     echo Julia is already installed.
 )
 
+
+:: Install Bluna-ai dependencies
+echo.
+echo ============================================
+echo Installing Bluna-AI's dependencies...
+echo ============================================
+cd "%INSTALL_DIR%"
+julia -e "using Pkg; Pkg.instantiate(); include(\"setup.jl\")"
+if %errorlevel% neq 0 (
+    echo Error: Failed to install Bluna-AI dependencies.
+    goto :cleanup
+) else (
+    echo Bluna-AI dependencies installed successfully.
+)
+
 :: Add Julia to PATH (optional safety)
 set "JULIA_PATH=%ProgramFiles%\Julia\bin"
 if exist "%JULIA_PATH%" (
@@ -112,7 +127,7 @@ set "SHORTCUT=%USERPROFILE%\Desktop\Bluna-AI.bat"
     echo @echo off
     echo cd "%INSTALL_DIR%"
     echo if not exist "%%INSTALL_DIR%%\setup_done.txt" ^(
-    echo     julia setup.jl
+    echo     julia main.jl
     echo     echo. ^> "%%INSTALL_DIR%%\setup_done.txt"
     echo ^) else ^(
     echo     julia main.jl
