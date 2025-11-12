@@ -54,3 +54,5 @@ function build_final_instructions(language::String, genre::String)
         JSON3.pretty(f, final_instructions)
     end
 end
+
+include("intro.jl")

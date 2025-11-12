@@ -15,4 +15,8 @@ end
 
 println("All packages from requirements.txt have been installed.")
 
-include("intro.jl")
+include("instructions_builder.jl")
+
+genre, language = user_choices()
+save_preferences(genre, language)
+build_final_instructions(language, genre)
