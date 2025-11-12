@@ -135,3 +135,7 @@ function bluna_intro()
     println(subtitle_color, "Let’s start your coding journey...", reset)
     println()
 end
+
+bluna_intro()
+
+println("\n✅ Instructions loaded successfully!")
