@@ -1,5 +1,5 @@
 # Main file to run the Bluna ai program
-include("intro.jl")
+
 include("ollama_handler.jl")
 include("instruction_builder.jl")
 

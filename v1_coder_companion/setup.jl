@@ -14,3 +14,5 @@ open("requirements.txt", "r") do file
 end
 
 println("All packages from requirements.txt have been installed.")
+
+include("intro.jl")
