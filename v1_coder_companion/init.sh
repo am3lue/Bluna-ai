@@ -72,6 +72,8 @@ Terminal=true
 Type=Application
 Categories=Application;
 Icon=$INSTALL_DIR/../images/Bluna-AI.ico
+cd "$INSTALL_DIR"
+julia "$INSTALL_DIR/main.jl"
 EOL
 
 # Make the desktop shortcut executable

@@ -1,2 +1,2 @@
 genre = General Basics
-language = Web Development (HTML, CSS, JS)
+language = SQL

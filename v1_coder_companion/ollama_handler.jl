@@ -1,6 +1,6 @@
 using JSON
 
-FINAL_FILE = "prompts/final_instructions.json"
+FINAL_FILE = "./prompts/final_instructions.json"
 
 # ─────────────────────────────────────────────
 # 1. Load the final instruction JSON
