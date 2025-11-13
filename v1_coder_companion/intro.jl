@@ -103,12 +103,12 @@ function bluna_intro()
 
     # Render logo with Figlet.jl
     banner = try
-        FIGlet.render("Bluna ai", font="slant")
+        FIGlet.render("Bluna AI", "slant")
     catch
         try
-            FIGlet.figlet("Bluna ai", font="slant")
+            FIGlet.figlet("Bluna AI", font="slant")
         catch
-            "Bluna ai"
+            "Bluna AI"
         end
     end
     banner_color = Crayon(foreground=:light_blue, bold=true)
