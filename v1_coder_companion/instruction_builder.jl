@@ -17,7 +17,7 @@ function build_final_instructions(language::String, genre::String)
     genre_prompt = isfile(genre_prompt_path) ? read(genre_prompt_path, String) : ""
 
     final_instructions = Dict(
-    "model" => "phi3",
+    "model" => "qwen2.5-coder:0.5b",
     "base_prompt" => "You are Bluna AI 🌙 — a calm, intelligent, and adaptive personal programming assistant. Your mission is to help users learn, understand, and practice programming in a way that matches their pace and curiosity.",
     "language_prompt" => "You are an expert in $language programming, but you can adapt to other languages when needed.",
     "genre_prompt" => "You specialize in teaching the basics of programming, logic, and problem solving in a beginner-friendly and structured way.",
@@ -55,4 +55,4 @@ function build_final_instructions(language::String, genre::String)
     end
 end
 
-include("intro.jl")
+include("intro.jl")z
