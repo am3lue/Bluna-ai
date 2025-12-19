@@ -56,6 +56,7 @@ function save_results_to_json(results::Vector{WebScrapingResult}, filename::Stri
     @info "Results saved to $filename"
 end
 
+
 """
     duckduckgo_search(query::String; max_results::Int=5)
 
@@ -66,55 +67,104 @@ function duckduckgo_search(query::String; max_results::Int=20)
         search_url = "https://html.duckduckgo.com/html/?q=$(HTTP.escapeuri(query))"
 
         headers = [
-            "User-Agent" => "Mozilla/5.0 (X11; Linux x86_64)",
-            "Accept" => "text/html",
-            "Accept-Language" => "en-US,en;q=0.9",
-            "Referer" => "https://duckduckgo.com/"
+            "User-Agent" => "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36",
+            "Accept" => "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language" => "en-US,en;q=0.5",
+            "Accept-Encoding" => "gzip, deflate",
+            "Referer" => "https://duckduckgo.com/",
+            "Connection" => "keep-alive",
+            "Upgrade-Insecure-Requests" => "1"
         ]
 
-        response = HTTP.get(search_url; headers=headers)
+        # Add timeout handling
+        response = HTTP.get(search_url; headers=headers, timeout=15, readtimeout=15)
 
         if response.status != 200
-            @warn "Request failed: $(response.status)"
+            @warn "DuckDuckGo request failed: $(response.status)"
             return String[]
         end
 
         html = String(response.body)
         parsed = Gumbo.parsehtml(html)
 
-        # DuckDuckGo result links
-        selector = Selector("a[href^=\"/l/?uddg=\"]")
-        matches = eachmatch(selector, parsed.root)
-
-        if isempty(matches)
-            @warn "No matches found with selector. HTML snippet: $(html[1:min(500, end)])"
-            # Try alternative selector for standard links if structure changed
-            selector = Selector(".result__a")
-            matches = eachmatch(selector, parsed.root)
-        end
+        # Try multiple CSS selectors for DuckDuckGo result links
+        selectors_to_try = [
+            "a[href^=\"/l/?uddg=\"]",  # Original selector
+            ".result__a",              # Alternative selector
+            "a.result__a",             # More specific alternative
+            ".web-result a",           # Another potential selector
+            "a[href*=\"uddg\"]",       # Generic uddg selector
+        ]
 
         results = String[]
+        
+        for selector_str in selectors_to_try
+            selector = Selector(selector_str)
+            matches = eachmatch(selector, parsed.root)
+            
+            if !isempty(matches)
+                @info "Found $(length(matches)) results with selector: $selector_str"
 
-        for link in matches
-            href = get(link.attributes, "href", "")
-            uri = URI(href)
-            q_params = queryparams(uri)
 
-            if haskey(q_params, "uddg")
-                real_url = HTTP.unescapeuri(q_params["uddg"])
-                push!(results, real_url)
+                for link in matches
+                    href = get(link.attributes, "href", "")
+                    
+                    if !isempty(href)
+                        @debug "Processing href: '$href'"
+                        
+                        # Handle different URL formats
+                        if startswith(href, "/l/?uddg=")
+                            uri = URI(href)
+                            q_params = queryparams(uri)
+                            if haskey(q_params, "uddg")
+                                real_url = HTTP.unescapeuri(q_params["uddg"])
+                                push!(results, real_url)
+                                @info "Extracted URL from uddg: $real_url"
+                            end
+                        elseif startswith(href, "http")
+                            push!(results, href)
+                            @info "Direct HTTP URL: $href"
+                        elseif startswith(href, "https")
+                            push!(results, href)
+                            @info "Direct HTTPS URL: $href"
+                        elseif startswith(href, "/")
+                            # Handle relative URLs - convert to absolute
+                            if startswith(href, "//")
+                                absolute_url = "https:$href"
+                            else
+                                absolute_url = "https://duckduckgo.com$href"
+                            end
+                            push!(results, absolute_url)
+                            @info "Converted relative URL: $absolute_url"
+                        else
+                            @warn "Skipping unknown href format: '$href'"
+                        end
+                    else
+                        @warn "Found link with empty href attribute"
+                    end
+                    
+                    length(results) >= max_results && break
+                end
+                break  # Exit if we found results with this selector
             end
+        end
 
-            length(results) >= max_results && break
+        if isempty(results)
+            @warn "No search results found for query: $query"
+            @warn "HTML structure may have changed. First 1000 chars: $(html[1:min(1000, end)])"
+        else
+            @info "Successfully found $(length(results)) URLs for query: $query"
         end
 
         return results
 
     catch e
         @error "DuckDuckGo search error" exception=e
+        @error "Failed to search for: $query"
         return String[]
     end
 end
+
 
 
 """
@@ -125,10 +175,11 @@ Test if a URL is reachable and returns the HTTP response or nothing.
 function url_tester(url::String)
     try
         headers = [
-            "User-Agent" => "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+            "User-Agent" => "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
         ]
         
-        response = HTTP.get(url, headers; timeout=10, readtimeout=10)
+        # Enhanced timeout handling
+        response = HTTP.get(url, headers; timeout=8, readtimeout=8, connect_timeout=5)
         
         # Check if response is successful
         if response.status == 200
@@ -139,7 +190,13 @@ function url_tester(url::String)
         end
         
     catch e
-        @warn "Failed to access URL $url: $(e)"
+        if isa(e, HTTP.RequestError)
+            @warn "Network error accessing $url: $(e.message)"
+        elseif isa(e, HTTP.TimeoutError)
+            @warn "Timeout accessing $url"
+        else
+            @warn "Failed to access URL $url: $(typeof(e)) - $(e)"
+        end
         return nothing
     end
 end

@@ -46,84 +46,113 @@ function main()
     end
 end
 
+
 function process_request(user_input::AbstractString)
     # Step 1: Initial Query to LLM
     print("🤖 Thinking...")
     
-    # Construct the full prompt structure for the chat
-    # Note: Ollama's /api/generate usually takes a single prompt, but we can simulate a chat structure 
-    # or just prepend the system prompt if the model supports it via the 'system' parameter in the client.
-    # Our client supports 'system'.
-    
-    response = OllamaClient.generate_completion(user_input; model=MODEL_NAME, system=SYSTEM_PROMPT)
-
-    # Clean up response just in case
-    clean_response = strip(response)
-
-    # Step 2: Check for Web Search Request
-    if startswith(clean_response, "SEARCH_WEB:")
-        # Extract the search query
-        search_query = strip(replace(clean_response, "SEARCH_WEB:" => ""))
+    try
+        # Construct the full prompt structure for the chat
+        # Note: Ollama's /api/generate usually takes a single prompt, but we can simulate a chat structure 
+        # or just prepend the system prompt if the model supports it via the 'system' parameter in the client.
+        # Our client supports 'system'.
         
-        perform_web_search_and_answer(user_input, search_query)
-    else
-        # Direct Answer
+        response = OllamaClient.generate_completion(user_input; model=MODEL_NAME, system=SYSTEM_PROMPT)
+
+        # Clean up response just in case
+        clean_response = strip(response)
+
+        # Step 2: Check for Web Search Request
+        if startswith(clean_response, "SEARCH_WEB:")
+            # Extract the search query
+            search_query = strip(replace(clean_response, "SEARCH_WEB:" => ""))
+            
+            perform_web_search_and_answer(user_input, search_query)
+        else
+            # Direct Answer
+            println("\r" * " "^20 * "\r") # Clear "Thinking..."
+            println("Bluna: $clean_response")
+        end
+        
+    catch e
         println("\r" * " "^20 * "\r") # Clear "Thinking..."
-        println("Bluna: $clean_response")
+        println("Bluna: I apologize, but I'm having trouble connecting to my AI model right now. $(typeof(e))")
+        @error "Error in AI processing: $(e)"
     end
 end
+
 
 function perform_web_search_and_answer(original_question::AbstractString, search_query::AbstractString)
     println("\r🔍 I need to check the web. Searching for: '$search_query'...")
     println("   (Please wait, this might take a moment...)")
 
-    # Call the existing web scraping module
-    # user_inputs_and_rendering returns Vector{WebScrapingResult}
-    results = WebScraping.user_inputs_and_rendering(search_query)
+    try
+        # Call the existing web scraping module with timeout
+        # user_inputs_and_rendering returns Vector{WebScrapingResult}
+        results = WebScraping.user_inputs_and_rendering(search_query)
 
-    if isempty(results)
-        println("⚠️  I couldn't find any information online. Here is what I know based on my training:")
-        # Fallback to asking LLM to answer without search if search failed, 
-        # explicitly telling it to do its best.
-        fallback_prompt = "The user asked: '$original_question'. You tried to search for '$search_query' but found nothing. Please answer the user's question as best as you can using your internal knowledge."
-        final_answer = OllamaClient.generate_completion(fallback_prompt; model=MODEL_NAME, system="You are a helpful coding tutor.")
-        println("Bluna: $final_answer")
-        return
-    end
+        if isempty(results)
+            # Graceful degradation - provide offline response
+            println("⚠️  Web search is currently unavailable. Let me answer based on my knowledge:")
+            fallback_prompt = "The user asked: '$original_question'. I couldn't access the web to search for '$search_query'. Please answer the user's question as best as you can using your internal knowledge, and mention that web search is temporarily unavailable."
+            final_answer = OllamaClient.generate_completion(fallback_prompt; model=MODEL_NAME, system="You are a helpful coding tutor.")
+            println("Bluna: $final_answer")
+            return
+        end
 
-    # Build context from results
-    context = ""
-    sources = String[]
-    
-    for (i, res) in enumerate(results)
-        # Limit context size to avoid overwhelming the small model
-        if i > 3 break end 
-        content_snippet = length(res.content) > 500 ? res.content[1:500] * "..." : res.content
-        context *= "\n--- Source $(i): $(res.url) ---\nTitle: $(res.title)\nContent: $content_snippet\n"
-        push!(sources, res.url)
-    end
+        # Build context from results
+        context = ""
+        sources = String[]
+        
+        for (i, res) in enumerate(results)
+            # Limit context size to avoid overwhelming the small model
+            if i > 3 break end 
+            content_snippet = length(res.content) > 500 ? res.content[1:500] * "..." : res.content
+            context *= "\n--- Source $(i): $(res.url) ---\nTitle: $(res.title)\nContent: $content_snippet\n"
+            push!(sources, res.url)
+        end
 
-    # Step 3: Synthesize Answer
-    println("🧠 Reading search results and summarizing...")
-    
-    synthesis_prompt = """
-    User Question: "$original_question"
-    
-    I have found the following information from the web:
-    $context
-    
-    Instruction:
-    1. Answer the user's question simply and clearly using the information above.
-    2. Since you are a coding tutor, explain any technical terms if necessary.
-    3. Explicitly mention that you found this information online.
-    """
+        # Step 3: Synthesize Answer
+        println("🧠 Reading search results and summarizing...")
+        
+        synthesis_prompt = """
+        User Question: "$original_question"
+        
+        I have found the following information from the web:
+        $context
+        
+        Instruction:
+        1. Answer the user's question simply and clearly using the information above.
+        2. Since you are a coding tutor, explain any technical terms if necessary.
+        3. Explicitly mention that you found this information online.
+        """
 
-    final_answer = OllamaClient.generate_completion(synthesis_prompt; model=MODEL_NAME, system="You are a helpful coding tutor. Summarize the provided search results to answer the user.")
+        final_answer = OllamaClient.generate_completion(synthesis_prompt; model=MODEL_NAME, system="You are a helpful coding tutor. Summarize the provided search results to answer the user.")
 
-    println("\nBluna: $final_answer")
-    println("\nSources:")
-    for src in sources
-        println("- $src")
+        println("\nBluna: $final_answer")
+        if !isempty(sources)
+            println("\nSources:")
+            for src in sources
+                println("- $src")
+            end
+        end
+        
+    catch e
+        # Comprehensive error handling
+        println("⚠️  Web search encountered an error: $(typeof(e))")
+        println("I'm having trouble accessing the web right now. Let me try to help based on my knowledge:")
+        
+        try
+            fallback_prompt = "The user asked: '$original_question'. I encountered an error when trying to search for '$search_query'. Please answer the user's question as best as you can using your internal knowledge, and mention that web search is temporarily unavailable due to technical issues."
+            final_answer = OllamaClient.generate_completion(fallback_prompt; model=MODEL_NAME, system="You are a helpful coding tutor.")
+            println("Bluna: $final_answer")
+        catch inner_e
+
+            println("Bluna: I apologize, but I'm having technical difficulties both with web search and my AI model. Please try again in a moment.")
+            @error "Critical error in web search and fallback: $(inner_e)"
+        end
+        
+        @error "Error in web search: $(e)"
     end
 end
 
