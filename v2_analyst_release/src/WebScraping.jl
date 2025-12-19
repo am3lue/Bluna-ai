@@ -62,7 +62,7 @@ end
 
 Search DuckDuckGo for the given query and return a list of URLs.
 """
-function duckduckgo_search(query::String; max_results::Int=20)
+function duckduckgo_search(query::String; max_results::Int=5)
     try
         search_url = "https://html.duckduckgo.com/html/?q=$(HTTP.escapeuri(query))"
 
@@ -77,7 +77,7 @@ function duckduckgo_search(query::String; max_results::Int=20)
         ]
 
         # Add timeout handling
-        response = HTTP.get(search_url; headers=headers, timeout=15, readtimeout=15)
+        response = HTTP.get(search_url; headers=headers, timeout=10, readtimeout=10, connect_timeout=10)
 
         if response.status != 200
             @warn "DuckDuckGo request failed: $(response.status)"
@@ -89,78 +89,85 @@ function duckduckgo_search(query::String; max_results::Int=20)
 
         # Try multiple CSS selectors for DuckDuckGo result links
         selectors_to_try = [
-            "a[href^=\"/l/?uddg=\"]",  # Original selector
-            ".result__a",              # Alternative selector
-            "a.result__a",             # More specific alternative
-            ".web-result a",           # Another potential selector
-            "a[href*=\"uddg\"]",       # Generic uddg selector
+            "a.result__a",             # Standard class
+            ".links_main a",           # Another common one
+            ".result__body a",
+            "a[href^=\"/l/?uddg=\"]",  # URL pattern
+            "a"                        # Fallback: check all links
         ]
 
         results = String[]
+        found_selector = false
         
         for selector_str in selectors_to_try
             selector = Selector(selector_str)
             matches = eachmatch(selector, parsed.root)
             
-            if !isempty(matches)
-                @info "Found $(length(matches)) results with selector: $selector_str"
+            # Filter matches that look like results
+            valid_matches = []
+            for link in matches
+                href = get(link.attributes, "href", "")
+                # We want links that look like external results, usually containing uddg
+                if occursin("uddg=", href) || (selector_str != "a" && !isempty(href))
+                     push!(valid_matches, link)
+                end
+            end
 
+            if !isempty(valid_matches)
+                @info "Found $(length(valid_matches)) potential results with selector: $selector_str"
+                found_selector = true
 
-                for link in matches
+                for link in valid_matches
                     href = get(link.attributes, "href", "")
                     
+                    @debug "Processing href: $href" 
+
                     if !isempty(href)
-                        @debug "Processing href: '$href'"
-                        
                         # Handle different URL formats
-                        if startswith(href, "/l/?uddg=")
-                            uri = URI(href)
-                            q_params = queryparams(uri)
-                            if haskey(q_params, "uddg")
-                                real_url = HTTP.unescapeuri(q_params["uddg"])
-                                push!(results, real_url)
-                                @info "Extracted URL from uddg: $real_url"
+                        if occursin("uddg=", href) # Relaxed from startswith
+                            try
+                                # Parse URI and look for uddg param regardless of path
+                                uri = URI(href)
+                                q_params = queryparams(uri)
+                                if haskey(q_params, "uddg")
+                                    real_url = HTTP.unescapeuri(q_params["uddg"])
+                                    push!(results, real_url)
+                                    @debug "Extracted: $real_url"
+                                else
+                                    @warn "uddg param not found in: $href"
+                                end
+                            catch e
+                                @warn "Failed to parse URI: $href"
                             end
-                        elseif startswith(href, "http")
-                            push!(results, href)
-                            @info "Direct HTTP URL: $href"
-                        elseif startswith(href, "https")
-                            push!(results, href)
-                            @info "Direct HTTPS URL: $href"
-                        elseif startswith(href, "/")
-                            # Handle relative URLs - convert to absolute
-                            if startswith(href, "//")
-                                absolute_url = "https:$href"
-                            else
-                                absolute_url = "https://duckduckgo.com$href"
-                            end
-                            push!(results, absolute_url)
-                            @info "Converted relative URL: $absolute_url"
-                        else
-                            @warn "Skipping unknown href format: '$href'"
+                        elseif !startswith(href, "/") && (startswith(href, "http") || startswith(href, "https"))
+                             # Direct links (rare in html version but possible)
+                             push!(results, href)
+                             @debug "Direct link: $href"
                         end
-                    else
-                        @warn "Found link with empty href attribute"
                     end
                     
-                    length(results) >= max_results && break
+                    if length(results) >= max_results 
+                        break 
+                    end
                 end
-                break  # Exit if we found results with this selector
+                
+                if !isempty(results)
+                    break 
+                end
             end
         end
 
         if isempty(results)
             @warn "No search results found for query: $query"
-            @warn "HTML structure may have changed. First 1000 chars: $(html[1:min(1000, end)])"
+            @warn "HTML structure may have changed. First 500 chars: $(html[1:min(500, end)])"
         else
             @info "Successfully found $(length(results)) URLs for query: $query"
         end
 
-        return results
+        return unique(results)
 
     catch e
         @error "DuckDuckGo search error" exception=e
-        @error "Failed to search for: $query"
         return String[]
     end
 end
@@ -178,8 +185,8 @@ function url_tester(url::String)
             "User-Agent" => "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
         ]
         
-        # Enhanced timeout handling
-        response = HTTP.get(url, headers; timeout=8, readtimeout=8, connect_timeout=5)
+        # Enhanced timeout handling - Reduced to 5s for faster failing
+        response = HTTP.get(url, headers; timeout=5, readtimeout=5, connect_timeout=3)
         
         # Check if response is successful
         if response.status == 200
@@ -190,13 +197,7 @@ function url_tester(url::String)
         end
         
     catch e
-        if isa(e, HTTP.RequestError)
-            @warn "Network error accessing $url: $(e.message)"
-        elseif isa(e, HTTP.TimeoutError)
-            @warn "Timeout accessing $url"
-        else
-            @warn "Failed to access URL $url: $(typeof(e)) - $(e)"
-        end
+        # Silent fail for speed
         return nothing
     end
 end
@@ -279,17 +280,18 @@ function scrape_page(url::String)
 end
 
 """
-    user_inputs_and_rendering(input::String)
+    user_inputs_and_rendering(input::String; max_scrape::Int=3)
 
 Main function that processes user input, searches the web, and renders results.
+Limits scraping to `max_scrape` pages to prevent hanging.
 """
-function user_inputs_and_rendering(input)
+function user_inputs_and_rendering(input; max_scrape::Int=3)
     input = join(input)
     try
         @info "Processing user input: $input"
         
-        # Search for URLs
-        urls = duckduckgo_search(input)
+        # Search for URLs - Limit to max_scrape + 2 to have some backup if one fails
+        urls = duckduckgo_search(input; max_results=max_scrape + 2)
         
         if isempty(urls)
             @warn "No search results found for: $input"
@@ -301,19 +303,24 @@ function user_inputs_and_rendering(input)
         
         # Add rate limiting (basic implementation)
         for (i, url) in enumerate(urls)
+            if length(results) >= max_scrape
+                break
+            end
+
             if i > 1
-                sleep(1)  # 1 second delay between requests
+                sleep(0.5)  # Reduced delay
             end
             
             page_data = scrape_page(url)
-            push!(results, page_data)
+            
+            # Only add if successfully scraped (status is true)
+            if page_data.status
+                push!(results, page_data)
+            end
         end
         
-        # Filter successful results
-        successful_results = filter(r -> r.status, results)
-        
-        @info "Successfully scraped $(length(successful_results)) out of $(length(results)) pages"
-        return successful_results
+        @info "Successfully scraped $(length(results)) pages"
+        return results
         
     catch e
         @error "Error in user_inputs_and_rendering: $(e)"
@@ -328,22 +335,22 @@ Format search results for display.
 """
 function format_results(results::Vector{WebScrapingResult})
     if isempty(results)
-        println("No results found.")
+        println("❌ No results found.")
         return
     end
     
-    println("🔍 Search Results:")
-    println("="^60)
+    println("\n🌐 🔍 Search Results:")
+    println("═"^60)
     
     for (i, result) in enumerate(results)
-        println("[$i] $(result.title)")
-        println("   📍 $(result.url)")
+        println("📌 [$i] $(result.title)")
+        println("   🔗 $(result.url)")
         println("   📝 $(result.description)")
         if !isempty(result.content)
             content_preview = length(result.content) > 200 ? result.content[1:200] * "..." : result.content
             println("   📄 $content_preview")
         end
-        println("-"^60)
+        println("─"^60)
     end
 end
 
@@ -353,15 +360,17 @@ end
 Interactive search function for command-line usage.
 """
 function interactive_search()
-    println("🌐 Bluna AI - Online Mode")
-    println("Enter your search query (or 'quit' to exit):")
+    println("╔" * "═"^58 * "╗")
+    println("║  🌐 Bluna AI - Online Mode                               ║")
+    println("╚" * "═"^58 * "╝")
+    println("💡 Enter your search query (or 'quit' to exit):")
     
     while true
-        print("🔎 Search: ")
+        print("\n🔎 Search > ")
         input_query = strip(readline())
         
         if lowercase(input_query) in ["quit", "exit", "q"]
-            println("👋 Goodbye!")
+            println("👋 Goodbye! ✨")
             break
         end
         
@@ -370,7 +379,7 @@ function interactive_search()
             continue
         end
         
-        println("🔄 Searching...")
+        println("🔄 🔍 Searching...")
         scraped_results = user_inputs_and_rendering(input_query)
         format_results(scraped_results)
         println()

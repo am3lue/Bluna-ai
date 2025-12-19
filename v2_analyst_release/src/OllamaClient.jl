@@ -27,7 +27,8 @@ function generate_completion(prompt::AbstractString; model::String="qwen2.5-code
         response = HTTP.post(url, 
             ["Content-Type" => "application/json"], 
             JSON.json(body),
-            readtimeout=120
+            readtimeout=120,
+            connect_timeout=10
         )
         
         if response.status == 200

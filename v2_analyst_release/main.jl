@@ -4,6 +4,7 @@ include("src/WebScraping.jl")
 using .OllamaClient
 using .WebScraping
 using Printf
+using Markdown
 
 # --- Configuration ---
 const MODEL_NAME = "qwen2.5-coder:0.5b"
@@ -23,18 +24,45 @@ You: SEARCH_WEB: latest python version release date
 If you know the answer (e.g., basic syntax, logic explanations), just answer directly and kindly.
 """
 
+# --- UX / Colors ---
+const RESET   = "\e[0m"
+const BOLD    = "\e[1m"
+const RED     = "\e[31m"
+const GREEN   = "\e[32m"
+const YELLOW  = "\e[33m"
+const BLUE    = "\e[34m"
+const PURPLE  = "\e[35m"
+const CYAN    = "\e[36m"
+const WHITE   = "\e[37m"
+
+function print_header()
+    print(RESET)
+    println(BOLD * PURPLE * "╔" * "═"^58 * "╗" * RESET)
+    println(BOLD * PURPLE * "║" * " "^58 * "║" * RESET)
+    println(BOLD * PURPLE * "║" * BOLD * CYAN * "   ✨ 🎓  Bluna AI - Coding Tutor  🎓 ✨               " * BOLD * PURPLE * "║" * RESET)
+    println(BOLD * PURPLE * "║" * " "^58 * "║" * RESET)
+    println(BOLD * PURPLE * "║" * BOLD * WHITE * "      🚀 Powered by $MODEL_NAME" * " "^(43 - length(MODEL_NAME)) * BOLD * PURPLE * "║" * RESET)
+    println(BOLD * PURPLE * "║" * " "^58 * "║" * RESET)
+    println(BOLD * PURPLE * "║" * GRAY("   💡 Type 'exit', 'quit', or 'q' to stop.") * " "^16 * BOLD * PURPLE * "║" * RESET)
+    println(BOLD * PURPLE * "╚" * "═"^58 * "╝" * RESET)
+    println()
+end
+
+function print_bluna_prefix()
+    print(BOLD * PURPLE * "🤖 Bluna: " * RESET)
+end
+
+GRAY(s) = "\e[90m" * s * RESET
+
 function main()
-    println("="^60)
-    println("🎓 Bluna AI - Coding Tutor (Powered by $MODEL_NAME)")
-    println("   Type 'exit', 'quit', or 'q' to stop.")
-    println("="^60)
+    print_header()
 
     while true
-        print("\nUser > ")
+        print(BOLD * GREEN * "\n👤 User > " * RESET)
         user_input = strip(readline())
 
         if lowercase(user_input) in ["exit", "quit", "q"]
-            println("👋 Happy coding! See you next time.")
+            println(BOLD * PURPLE * "\n👋 Happy coding! See you next time! ✨" * RESET)
             break
         end
 
@@ -49,14 +77,9 @@ end
 
 function process_request(user_input::AbstractString)
     # Step 1: Initial Query to LLM
-    print("🤖 Thinking...")
+    print(YELLOW * "✨ 🤔 Thinking..." * RESET)
     
     try
-        # Construct the full prompt structure for the chat
-        # Note: Ollama's /api/generate usually takes a single prompt, but we can simulate a chat structure 
-        # or just prepend the system prompt if the model supports it via the 'system' parameter in the client.
-        # Our client supports 'system'.
-        
         response = OllamaClient.generate_completion(user_input; model=MODEL_NAME, system=SYSTEM_PROMPT)
 
         # Clean up response just in case
@@ -66,37 +89,41 @@ function process_request(user_input::AbstractString)
         if startswith(clean_response, "SEARCH_WEB:")
             # Extract the search query
             search_query = strip(replace(clean_response, "SEARCH_WEB:" => ""))
-            
+            # Clear the "Thinking..." line
+            print("\r" * " "^30 * "\r") 
             perform_web_search_and_answer(user_input, search_query)
         else
             # Direct Answer
-            println("\r" * " "^20 * "\r") # Clear "Thinking..."
-            println("Bluna: $clean_response")
+            print("\r" * " "^30 * "\r") # Clear "Thinking..."
+            print_bluna_prefix()
+            display(Markdown.parse(clean_response))
+            println() 
         end
         
     catch e
-        println("\r" * " "^20 * "\r") # Clear "Thinking..."
-        println("Bluna: I apologize, but I'm having trouble connecting to my AI model right now. $(typeof(e))")
+        print("\r" * " "^30 * "\r") # Clear "Thinking..."
+        println(RED * "🤖 Bluna: 😓 I apologize, but I'm having trouble connecting to my AI model right now." * RESET)
         @error "Error in AI processing: $(e)"
     end
 end
 
 
 function perform_web_search_and_answer(original_question::AbstractString, search_query::AbstractString)
-    println("\r🔍 I need to check the web. Searching for: '$search_query'...")
-    println("   (Please wait, this might take a moment...)")
-
+    println(YELLOW * "🌐 🔍 I need to check the web. Searching for: '$search_query'..." * RESET)
+    
     try
         # Call the existing web scraping module with timeout
-        # user_inputs_and_rendering returns Vector{WebScrapingResult}
         results = WebScraping.user_inputs_and_rendering(search_query)
 
         if isempty(results)
-            # Graceful degradation - provide offline response
-            println("⚠️  Web search is currently unavailable. Let me answer based on my knowledge:")
+            # Graceful degradation
+            println(YELLOW * "⚠️  Web search is currently unavailable. Using internal knowledge..." * RESET)
             fallback_prompt = "The user asked: '$original_question'. I couldn't access the web to search for '$search_query'. Please answer the user's question as best as you can using your internal knowledge, and mention that web search is temporarily unavailable."
             final_answer = OllamaClient.generate_completion(fallback_prompt; model=MODEL_NAME, system="You are a helpful coding tutor.")
-            println("Bluna: $final_answer")
+            
+            print_bluna_prefix()
+            display(Markdown.parse(final_answer))
+            println()
             return
         end
 
@@ -105,15 +132,15 @@ function perform_web_search_and_answer(original_question::AbstractString, search
         sources = String[]
         
         for (i, res) in enumerate(results)
-            # Limit context size to avoid overwhelming the small model
+            # Limit context size
             if i > 3 break end 
-            content_snippet = length(res.content) > 500 ? res.content[1:500] * "..." : res.content
+            content_snippet = length(res.content) > 600 ? res.content[1:600] * "..." : res.content
             context *= "\n--- Source $(i): $(res.url) ---\nTitle: $(res.title)\nContent: $content_snippet\n"
             push!(sources, res.url)
         end
 
         # Step 3: Synthesize Answer
-        println("🧠 Reading search results and summarizing...")
+        print(YELLOW * "🧠 Reading $(length(sources)) results and summarizing..." * RESET)
         
         synthesis_prompt = """
         User Question: "$original_question"
@@ -129,26 +156,32 @@ function perform_web_search_and_answer(original_question::AbstractString, search
 
         final_answer = OllamaClient.generate_completion(synthesis_prompt; model=MODEL_NAME, system="You are a helpful coding tutor. Summarize the provided search results to answer the user.")
 
-        println("\nBluna: $final_answer")
+        print("\r" * " "^60 * "\r") # Clear "Reading..."
+        print_bluna_prefix()
+        display(Markdown.parse(final_answer))
+        
         if !isempty(sources)
-            println("\nSources:")
+            println(BOLD * CYAN * "\n📚 Sources:" * RESET)
             for src in sources
-                println("- $src")
+                println(CYAN * "   🔗 $src" * RESET)
             end
         end
+        println()
         
     catch e
         # Comprehensive error handling
-        println("⚠️  Web search encountered an error: $(typeof(e))")
-        println("I'm having trouble accessing the web right now. Let me try to help based on my knowledge:")
+        println(RED * "\n❌ ⚠️  Web search encountered an error." * RESET)
+        println("Let me try to help based on my knowledge:")
         
         try
             fallback_prompt = "The user asked: '$original_question'. I encountered an error when trying to search for '$search_query'. Please answer the user's question as best as you can using your internal knowledge, and mention that web search is temporarily unavailable due to technical issues."
             final_answer = OllamaClient.generate_completion(fallback_prompt; model=MODEL_NAME, system="You are a helpful coding tutor.")
-            println("Bluna: $final_answer")
+            
+            print_bluna_prefix()
+            display(Markdown.parse(final_answer))
+            println()
         catch inner_e
-
-            println("Bluna: I apologize, but I'm having technical difficulties both with web search and my AI model. Please try again in a moment.")
+            println(RED * "🤖 Bluna: 🤯 I apologize, but I'm having technical difficulties. Please try again later." * RESET)
             @error "Critical error in web search and fallback: $(inner_e)"
         end
         
