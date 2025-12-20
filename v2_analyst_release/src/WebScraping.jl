@@ -19,10 +19,36 @@ using Logging
 using URIs
 using JSON
 
-export duckduckgo_search, scrape_page, user_inputs_and_rendering, WebScrapingResult, save_results_to_json
+export duckduckgo_search, scrape_page, user_inputs_and_rendering, WebScrapingResult, save_results_to_json, OPEN_SOURCE_DOMAINS, construct_educational_query
 
 # Configure logging
 Logging.global_logger(Logging.SimpleLogger(stderr, Logging.Info))
+
+const OPEN_SOURCE_DOMAINS = [
+    "wikipedia.org",
+    "github.com",
+    "stackoverflow.com",
+    "readthedocs.io",
+    "dev.to",
+    "freecodecamp.org",
+    "w3schools.com",
+    "mozilla.org",
+    "julialang.org",
+    "python.org",
+    "geeksforgeeks.org",
+    "khanacademy.org"
+]
+
+"""
+    construct_educational_query(base_query::AbstractString)
+
+Constructs a query optimized for finding educational content from open sources.
+"""
+function construct_educational_query(base_query::AbstractString)
+    # We don't use 'site:...' for all of them as it might limit results too much if the topic isn't there.
+    # Instead we add semantic keywords.
+    return "$base_query tutorial explanation documentation open source example"
+end
 
 # Define result type for better type safety
 struct WebScrapingResult
@@ -34,11 +60,11 @@ struct WebScrapingResult
 end
 
 """
-    save_results_to_json(results::Vector{WebScrapingResult}, filename::String)
+    save_results_to_json(results::Vector{WebScrapingResult}, filename::AbstractString)
 
 Converts a vector of WebScrapingResult objects to a JSON array and saves it to a file.
 """
-function save_results_to_json(results::Vector{WebScrapingResult}, filename::String)
+function save_results_to_json(results::Vector{WebScrapingResult}, filename::AbstractString)
     json_data = Dict[]
     for res in results
         push!(json_data, Dict(
@@ -50,7 +76,7 @@ function save_results_to_json(results::Vector{WebScrapingResult}, filename::Stri
         ))
     end
     
-    open(filename, "w") do f
+    open(String(filename), "w") do f
         JSON.print(f, json_data, 4) # 4 for pretty printing with 4 spaces indentation
     end
     @info "Results saved to $filename"
@@ -58,11 +84,11 @@ end
 
 
 """
-    duckduckgo_search(query::String; max_results::Int=5)
+    duckduckgo_search(query::AbstractString; max_results::Int=5)
 
 Search DuckDuckGo for the given query and return a list of URLs.
 """
-function duckduckgo_search(query::String; max_results::Int=5)
+function duckduckgo_search(query::AbstractString; max_results::Int=5)
     try
         search_url = "https://html.duckduckgo.com/html/?q=$(HTTP.escapeuri(query))"
 
@@ -175,18 +201,18 @@ end
 
 
 """
-    url_tester(url::String)
+    url_tester(url::AbstractString)
 
 Test if a URL is reachable and returns the HTTP response or nothing.
 """
-function url_tester(url::String)
+function url_tester(url::AbstractString)
     try
         headers = [
             "User-Agent" => "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
         ]
         
         # Enhanced timeout handling - Reduced to 5s for faster failing
-        response = HTTP.get(url, headers; timeout=5, readtimeout=5, connect_timeout=3)
+        response = HTTP.get(String(url), headers; timeout=5, readtimeout=5, connect_timeout=3)
         
         # Check if response is successful
         if response.status == 200
@@ -220,15 +246,15 @@ function text_content(node)
 end
 
 """
-    scrape_page(url::String)
+    scrape_page(url::AbstractString)
 
 Scrape a webpage and extract title, description, and content.
 """
-function scrape_page(url::String)
+function scrape_page(url::AbstractString)
     try
         response = url_tester(url)
         if response === nothing
-            return WebScrapingResult(url, "Error", "Failed to access page", false, "")
+            return WebScrapingResult(String(url), "Error", "Failed to access page", false, "")
         end
         
         html = String(response.body)
@@ -271,22 +297,21 @@ function scrape_page(url::String)
             end
         end
         
-        return WebScrapingResult(url, title, meta_description, true, content)
+        return WebScrapingResult(String(url), String(title), String(meta_description), true, String(content))
         
     catch e
         @error "Error scraping page $url: $(e)"
-        return WebScrapingResult(url, "Error", "Failed to parse page", false, "")
+        return WebScrapingResult(String(url), "Error", "Failed to parse page", false, "")
     end
 end
 
 """
-    user_inputs_and_rendering(input::String; max_scrape::Int=3)
+    user_inputs_and_rendering(input::AbstractString; max_scrape::Int=3)
 
 Main function that processes user input, searches the web, and renders results.
 Limits scraping to `max_scrape` pages to prevent hanging.
 """
-function user_inputs_and_rendering(input; max_scrape::Int=3)
-    input = join(input)
+function user_inputs_and_rendering(input::AbstractString; max_scrape::Int=3)
     try
         @info "Processing user input: $input"
         

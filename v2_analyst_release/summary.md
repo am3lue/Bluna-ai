@@ -1,82 +1,49 @@
+# 📘 Bluna AI - The Lowdown
 
-# Project Summary: Bluna-ai v2 Analyst Release
+**Version:** 2.1 (The "Smart & Friendly" Release)
+**Date:** Dec 20, 2025
 
-## Date: 2025-12-20
+## 🌟 What's This All About?
+Hey there! You're looking at Bluna AI v2. This isn't just a script anymore; it's a full-blown intelligent agent that wants to help you code better.
 
-## Status: RELEASE CANDIDATE (v2.1) ✅
-
-### Objectives
-1.  **Refactor into Code Learning Helper**:
-    *   **Goal**: Create a CLI for learning to code.
-    *   **Entry Point**: `main.jl` (Root).
-    *   **AI Model**: `qwen2.5-coder:0.5b` (via Ollama).
-    *   **Fallback**: Auto-web search when AI is unsure.
-    *   **Constraint**: Use `src/OllamaClient.jl` and `src/WebScraping.jl`.
-
-### Analysis of Existing Code
-*   **`main.jl`**: **COMPLETED**: Rewritten as coding tutor CLI with enhanced UX (colors, markdown, status indicators, emojis).
-*   **`src/OllamaClient.jl`**: **COMPLETED**: Updated with error handling and connection timeouts.
-*   **`src/WebScraping.jl`**: **COMPLETED**: DuckDuckGo scraper fixed with robust extraction and HTTP timeouts.
-*   **Documentation**: **COMPLETED**: Updated README and Audit to reflect real functionality.
-
-## Current Actions
-- [x] Create/Update `summary.md`
-- [x] Fix DuckDuckGo web scraping selectors and extraction.
-- [x] Add proper timeout handling for all network calls.
-- [x] Enhance CLI User Experience (ANSI colors, Markdown, status indicators).
-- [x] **UI Overhaul v2.1**: Added emoji support, boxed headers, and friendlier prompts.
-- [x] Implement graceful degradation for web search failures.
-- [x] Update documentation and audit logs.
-
-## Implementation Details
-- **Entry Point**: Run `julia main.jl` to start the coding tutor.
-- **AI Integration**: Uses `src/OllamaClient.jl` with connection timeouts.
-- **Web Search**: Uses `src/WebScraping.jl` with a robust multi-selector approach and HTTP timeouts.
-- **UX**: Clean, colorful CLI with clear feedback, emojis (`✨`, `🎓`, `🚀`), and boxed layouts.
-
-## File Structure
-- `main.jl`: Entry point.
-- `src/OllamaClient.jl`: Ollama API wrapper.
-- `src/WebScraping.jl`: Web scraping functionality (FIXED).
-- `README.md`: User instructions.
-- `user_experience_audit.md`: Comprehensive audit of issues (FIXED).
-
-## ⚠️ PREVIOUS CRITICAL ISSUES (RESOLVED)
-
-### Web Scraping Failure ✅ FIXED
-- **Fix**: Implemented flexible `uddg` parameter extraction and multi-selector fallback.
-- **Status**: Working and tested.
-
-### Application Stability ✅ FIXED
-- **Fix**: Added `connect_timeout` and `readtimeout` to all HTTP requests (Ollama and Web).
-- **Status**: Stable, no more infinite hangs.
-
-### User Experience ✅ IMPROVED
-- **Fix**: Added colors, Markdown support, and overwritable status lines ("Thinking...", "Searching...").
-- **Update v2.1**: Introduced a "Good" UI with emojis, distinct user/bot personas, and better visual hierarchy.
-- **Status**: Professional, engaging, and responsive CLI.
-
-## ✅ ACTUAL TESTING RESULTS (2025-12-20)
-
-### Offline Query Testing ✅ WORKING
-- **"What is a variable?"** -> Answered correctly with code examples and proper formatting.
-
-### Online Query Testing ✅ WORKING
-- **"latest version of julia"** -> Triggers search, scrapes results, and synthesizes a correct answer with sources.
-
-## Current Status: RELEASE CANDIDATE (v2.1) ✅
-
-### Working Components ✅
-- Interactive coding tutor interface with enhanced "Good" UI and Emojis.
-- AI-powered responses using Qwen2.5-coder:0.5b.
-- Robust web search fallback with source attribution.
-- Proper error handling and timeouts.
-
-## Conclusion
-**The Bluna AI Coding Tutor is now at v2.1 Release Candidate status.** The UI has been significantly upgraded to be more engaging and visually appealing with emojis and boxed layouts, matching the "more good" request.
+We took everything cool about the first version (like the retro look) and gave it superpowers:
+*   **🧠 I Remember You:** I have a long-term memory now! Tell me you like Python, and I won't ask you again five minutes later.
+*   **📅 I'm Your Planner:** Type `create schedule` and I'll build a custom learning path for you.
+*   **🌐 I Can Google Things:** If I don't know the answer, I'll hop online (via DuckDuckGo) and find it for you. No hallucinations here!
+*   **🛡️ I'm Rock Solid:** I won't leave you hanging. If a search takes too long, I'll time out gracefully instead of freezing.
 
 ---
 
-**UPDATED:** 2025-12-20
-**NEXT REVIEW:** Final Release
-**PRIORITY:** LOW (Polishing)
+## 🚀 How to Use Me
+
+### Quick Start
+Just run this in your terminal:
+```bash
+julia --project=. main.jl
+```
+If it's our first meeting, I'll run a quick setup wizard to learn your name and style.
+
+### Cool Commands to Try
+*   **"Explain recursion"** 👉 I'll teach you like a friend.
+*   **"Remember that I use Linux"** 👉 I'll save that info forever.
+*   **"Create schedule"** 👉 We'll make a study plan together.
+*   **"Clear memory"** 👉 Want a fresh start? No problem.
+*   **`exit`** 👉 See ya later!
+
+---
+
+## 🛠️ Under the Hood (For Geeks)
+
+We kept it simple but powerful:
+*   **`main.jl`**: The brain. It runs the show.
+*   **`src/Memory.jl`**: My hippocampus. Saves your facts to a JSON file.
+*   **`src/Scheduler.jl`**: The logic that builds your calendar.
+*   **`src/WebScraping.jl`**: My eyes on the web. Scrapes docs when needed.
+
+**Status:**
+✅ **Stable & Tested:** I've passed all my exams (tests).
+✅ **Friendly UI:** I use `FIGlet` and colors because coding should look cool.
+
+---
+
+**Enjoy learning with Bluna!** 🎓
