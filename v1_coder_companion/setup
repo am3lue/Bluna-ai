@@ -1,0 +1,284 @@
+#!/bin/bash
+
+# Bluna AI v1 Coder Companion Setup Script
+# Cross-platform setup for Linux, macOS, and Windows (WSL/Git Bash)
+
+set -e
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Function to print colored output
+print_status() {
+    echo -e "${BLUE}[INFO]${NC} $1"
+}
+
+print_success() {
+    echo -e "${GREEN}[SUCCESS]${NC} $1"
+}
+
+print_warning() {
+    echo -e "${YELLOW}[WARNING]${NC} $1"
+}
+
+print_error() {
+    echo -e "${RED}[ERROR]${NC} $1"
+}
+
+# Detect OS
+detect_os() {
+    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        echo "linux"
+    elif [[ "$OSTYPE" == "darwin"* ]]; then
+        echo "macos"
+    elif [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" ]]; then
+        echo "windows"
+    else
+        echo "unknown"
+    fi
+}
+
+# Install Julia
+install_julia() {
+    print_status "Checking Julia installation..."
+    
+    if command -v julia &> /dev/null; then
+        julia_version=$(julia --version | cut -d' ' -f3)
+        print_success "Julia is already installed (version $julia_version)"
+        return 0
+    fi
+    
+    local os=$(detect_os)
+    print_status "Installing Julia..."
+    
+    case $os in
+        "linux")
+            # Try package manager first
+            if command -v apt &> /dev/null; then
+                sudo apt update && sudo apt install -y julia
+            elif command -v brew &> /dev/null; then
+                brew install julia
+            elif command -v yum &> /dev/null; then
+                sudo yum install -y julia
+            elif command -v dnf &> /dev/null; then
+                sudo dnf install -y julia
+            elif command -v pacman &> /dev/null; then
+                sudo pacman -S --noconfirm julia
+            else
+                install_julia_manual
+            fi
+            ;;
+        "macos")
+            if ! command -v brew &> /dev/null; then
+                print_status "Installing Homebrew..."
+                /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+            fi
+            brew install julia
+            ;;
+        "windows")
+            print_warning "Please install Julia manually from https://julialang.org/downloads/"
+            return 1
+            ;;
+    esac
+    
+    # Verify installation
+    if command -v julia &> /dev/null; then
+        julia_version=$(julia --version | cut -d' ' -f3)
+        print_success "Julia installed successfully (version $julia_version)"
+    else
+        print_error "Julia installation failed"
+        return 1
+    fi
+}
+
+# Install Julia manually
+install_julia_manual() {
+    local temp_dir=$(mktemp -d)
+    cd "$temp_dir"
+    
+    print_status "Downloading Julia..."
+    if [[ $(uname -m) == "x86_64" ]]; then
+        julia_tar="julia-1.9.4-linux-x86_64.tar.gz"
+    elif [[ $(uname -m) == "aarch64" ]]; then
+        julia_tar="julia-1.9.4-linux-aarch64.tar.gz"
+    else
+        print_error "Unsupported architecture: $(uname -m)"
+        return 1
+    fi
+    
+    curl -L -o "$julia_tar" "https://julialang-s3.julialang.org/bin/linux/x64/1.9/$julia_tar"
+    
+    print_status "Extracting Julia..."
+    tar -xzf "$julia_tar"
+    
+    print_status "Installing Julia to /usr/local/bin..."
+    sudo mv julia-*/ /opt/julia
+    sudo ln -sf /opt/julia/bin/julia /usr/local/bin/julia
+    
+    # Clean up
+    cd /
+    rm -rf "$temp_dir"
+    
+    print_success "Julia installed manually to /opt/julia"
+}
+
+# Install Ollama
+install_ollama() {
+    print_status "Checking Ollama installation..."
+    
+    if command -v ollama &> /dev/null; then
+        print_success "Ollama is already installed"
+        return 0
+    fi
+    
+    local os=$(detect_os)
+    print_status "Installing Ollama..."
+    
+    case $os in
+        "linux")
+            curl -fsSL https://ollama.ai/install.sh | sh
+            ;;
+        "macos")
+            if ! command -v brew &> /dev/null; then
+                print_status "Installing Homebrew..."
+                /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+            fi
+            brew install ollama
+            ;;
+        "windows")
+            print_warning "Please install Ollama manually from https://ollama.ai/download"
+            return 1
+            ;;
+    esac
+    
+    # Verify installation
+    if command -v ollama &> /dev/null; then
+        print_success "Ollama installed successfully"
+    else
+        print_error "Ollama installation failed"
+        return 1
+    fi
+}
+
+# Install Julia packages
+install_julia_packages() {
+    print_status "Installing Julia packages..."
+    
+    # Create a temporary script to install packages
+    local temp_script=$(mktemp)
+    cat > "$temp_script" << 'EOF'
+using Pkg
+Pkg.add("HTTP")
+Pkg.add("JSON")
+Pkg.add("Crayons")
+Pkg.add("FIGlet")
+Pkg.add("TOML")
+Pkg.add("Dates")
+EOF
+    
+    # Run the installation script
+    julia "$temp_script"
+    
+    # Clean up
+    rm "$temp_script"
+    
+    print_success "Julia packages installed successfully"
+}
+
+# Create desktop shortcut
+create_desktop_shortcut() {
+    local os=$(detect_os)
+    
+    case $os in
+        "linux")
+            local desktop_dir="$HOME/Desktop"
+            local shortcut_file="$desktop_dir/Bluna-AI-v1.desktop"
+            
+            cat > "$shortcut_file" << EOL
+[Desktop Entry]
+Name=Bluna AI v1 (Coder Companion)
+Comment=AI Programming Assistant - Coder Companion
+Exec=julia "$(pwd)/main.jl"
+Terminal=true
+Type=Application
+Categories=Development;
+Icon=$(pwd)/../images/Bluna-AI.png
+Path=$(pwd)
+EOL
+            
+            chmod +x "$shortcut_file"
+            print_success "Desktop shortcut created: $shortcut_file"
+            ;;
+        "macos")
+            local applications_dir="$HOME/Applications"
+            mkdir -p "$applications_dir"
+            local app_bundle="$applications_dir/Bluna AI v1.app"
+            
+            # Create a simple shell script wrapper
+            cat > "$app_bundle/Contents/MacOS/bluna-ai-v1" << EOL
+#!/bin/bash
+cd "$(pwd)"
+julia main.jl
+EOL
+            
+            chmod +x "$app_bundle/Contents/MacOS/bluna-ai-v1"
+            print_success "Application bundle created: $app_bundle"
+            ;;
+    esac
+}
+
+# Main installation function
+main() {
+    local os=$(detect_os)
+    
+    print_status "Bluna AI v1 Coder Companion Setup"
+    print_status "Detected OS: $os"
+    echo
+    
+    # Install Julia
+    if ! install_julia; then
+        print_error "Failed to install Julia"
+        exit 1
+    fi
+    
+    # Install Ollama
+    if ! install_ollama; then
+        print_warning "Failed to install Ollama (you can install it manually later)"
+    fi
+    
+    # Install Julia packages
+    install_julia_packages
+    
+    # Pull recommended Ollama model
+    if command -v ollama &> /dev/null; then
+        print_status "Pulling recommended Ollama model (this may take a while)..."
+        ollama pull phi3 || print_warning "Failed to pull Ollama model"
+    fi
+    
+    # Create desktop shortcut (Linux/macOS only)
+    if [[ "$os" != "windows" ]]; then
+        create_desktop_shortcut
+    fi
+    
+    # Run initial setup
+    print_status "Running initial setup..."
+    julia setup.jl
+    
+    print_success "Bluna AI v1 Coder Companion installed successfully!"
+    echo
+    print_status "To start Bluna AI v1, run:"
+    echo "  julia main.jl"
+    echo
+    if [[ "$os" != "windows" ]]; then
+        print_status "Or use the desktop shortcut that was created"
+    fi
+    echo
+    print_status "Happy coding with Bluna AI! 🚀💙"
+}
+
+# Run main function
+main "$@"
