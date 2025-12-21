@@ -291,7 +291,7 @@ create_desktop_shortcut() {
 [Desktop Entry]
 Name=Bluna AI
 Comment=AI Programming Assistant
-Exec=julia "$install_dir/main.jl"
+Exec=julia "$install_dir/v2_analyst_release/main.jl"
 Terminal=true
 Type=Application
 Categories=Development;
