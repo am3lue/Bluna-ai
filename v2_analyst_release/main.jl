@@ -92,18 +92,22 @@ end
 # --- AI Logic ---
 
 function get_system_prompt()
+    username = CONFIG.user_name
+    language = CONFIG.favorite_language
+    genre = CONFIG.learning_genre
+    style = CONFIG.teaching_style
     base_prompt = """
 You are Bluna AI 🌙 — a calm, intelligent, and adaptive personal programming assistant.
-Your mission is to help $(CONFIG.user_name) learn $(CONFIG.favorite_language) with a focus on $(CONFIG.learning_genre).
+Your mission is to help $username learn $language with a focus on $genre.
 
 [CONTEXT]
-Current Language: $(CONFIG.favorite_language)
-Current Genre: $(CONFIG.learning_genre)
+Current Language: $language
+Current Genre: $genre
 Current Date/Time: $(Dates.format(now(), "yyyy-mm-dd HH:MM:SS"))
 
 [INSTRUCTIONS]
 1. Memory: Use [USER FACTS] and [CONVERSATION HISTORY].
-2. Style: $(CONFIG.teaching_style).
+2. Style: $style.
 3. Web Search: If needed, use `SEARCH_WEB: <query>`.
 """
     
