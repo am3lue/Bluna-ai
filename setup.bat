@@ -154,14 +154,14 @@ set "SHORTCUT=%DESKTOP%\Bluna-AI.bat"
 
 echo @echo off > "%SHORTCUT%"
 echo cd /d "%INSTALL_DIR%" >> "%SHORTCUT%"
-echo julia main.jl >> "%SHORTCUT%"
+echo julia ./v2_analyst_release/main.jl >> "%SHORTCUT%"
 echo pause >> "%SHORTCUT%"
 
 echo [SUCCESS] Desktop shortcut created: %SHORTCUT%
 
 :: Run initial setup
 echo [INFO] Running initial setup...
-julia main.jl --setup
+julia ./v2_analyst_release/main.jl --setup
 
 if %errorLevel% equ 0 (
     echo.
