@@ -1,8 +1,12 @@
+include("src/Config.jl")
+include("src/UI.jl")
 include("src/OllamaClient.jl")
 include("src/WebScraping.jl")
 include("src/Memory.jl")
 include("src/Scheduler.jl")
 
+using .Config
+using .UI
 using .OllamaClient
 using .WebScraping
 using .Memory
@@ -11,67 +15,16 @@ using Printf
 using Markdown
 using Dates
 using JSON
-using FIGlet
-using Crayons
 
-# --- Configuration Management ---
-mutable struct AppConfig
-    model_name::String
-    ollama_host::String
-    user_name::String
-    teaching_style::String
-    favorite_language::String
-    learning_genre::String
-end
+# --- Global State ---
+global CONFIG = Config.load_config()
+global GLOBAL_MEMORY = nothing
 
-function load_config()
-    default_config = AppConfig("qwen2.5-coder:0.5b", "http://localhost:11434", "Learner", "Friendly", "Julia", "General Basics")
-    
-    # Try loading config.json
-    if isfile("config.json")
-        try
-            data = JSON.parsefile("config.json")
-            if haskey(data, "llm")
-                default_config.model_name = get(data["llm"], "model", default_config.model_name)
-                default_config.ollama_host = get(data["llm"], "host", default_config.ollama_host)
-            end
-            if haskey(data, "user")
-                default_config.user_name = get(data["user"], "name", default_config.user_name)
-                default_config.teaching_style = get(data["user"], "style", default_config.teaching_style)
-                default_config.favorite_language = get(data["user"], "language", default_config.favorite_language)
-                default_config.learning_genre = get(data["user"], "genre", default_config.learning_genre)
-            end
-        catch e
-            @warn "Failed to parse config.json. Using defaults."
-        end
-    end
-    return default_config
-end
-
-global CONFIG = load_config()
-
-# --- v1 UI Helpers ---
-const TITLE_COLOR = Crayon(foreground=:light_blue, bold=true)
-const OPTION_COLOR = Crayon(foreground=:cyan)
-const PROMPT_COLOR = Crayon(foreground=:light_cyan)
-const BLUNA_COLOR = Crayon(foreground=:light_magenta, bold=true)
-const USER_COLOR = Crayon(foreground=:green, bold=true)
-const SYSTEM_COLOR = Crayon(foreground=:yellow)
-const RESET = Crayon(reset=true)
-
-# Base Colors for internal use
-const BOLD   = Crayon(bold=true)
-const RED    = Crayon(foreground=:red)
-const GREEN  = Crayon(foreground=:green)
-const YELLOW = Crayon(foreground=:yellow)
-const CYAN   = Crayon(foreground=:cyan)
-const BLUE   = Crayon(foreground=:blue)
-const PURPLE = Crayon(foreground=:magenta)
-const WHITE  = Crayon(foreground=:white)
+# --- Setup Wizard ---
 
 function run_first_time_setup()
-    print("\033c") # Clear screen
-    FIGlet.render("Bluna AI", "Big Money-nw")
+    UI.clear_screen()
+    UI.render_logo()
     println(TITLE_COLOR, "\n=============================", RESET)
     println(TITLE_COLOR, "       ✨ Setup Wizard ✨     ", RESET)
     println(TITLE_COLOR, "=============================\n", RESET)
@@ -130,22 +83,10 @@ function run_first_time_setup()
     end
 
     println(USER_COLOR, "\n✔ Configuration saved successfully!", RESET)
-    println(PROMPT_COLOR, "Bluna AI is now ready to help you learn \$(language)! 🌙💙\n", RESET)
+    println(PROMPT_COLOR, "Bluna AI is now ready to help you learn $(language)! 🌙💙\n", RESET)
     sleep(1.0)
     
-    global CONFIG = load_config()
-end
-
-function print_header()
-    print("\033c") # Clear screen
-    FIGlet.render("Bluna AI", "Big Money-nw")
-    println(TITLE_COLOR, "─"^40, RESET)
-    println(OPTION_COLOR, " Welcome back, \$(CONFIG.user_name)!", RESET)
-    println(OPTION_COLOR, " Mode: \$(CONFIG.learning_genre) | \$(CONFIG.favorite_language)", RESET)
-    println(OPTION_COLOR, " Style: \$(CONFIG.teaching_style)", RESET)
-    println(TITLE_COLOR, "─"^40, RESET)
-    println(Crayon(foreground=:dark_gray), " (Type 'exit' to quit, 'create schedule' for a plan)", RESET)
-    println()
+    global CONFIG = Config.load_config()
 end
 
 # --- AI Logic ---
@@ -153,16 +94,16 @@ end
 function get_system_prompt()
     base_prompt = """
 You are Bluna AI 🌙 — a calm, intelligent, and adaptive personal programming assistant.
-Your mission is to help \$(CONFIG.user_name) learn \$(CONFIG.favorite_language) with a focus on \$(CONFIG.learning_genre).
+Your mission is to help $(CONFIG.user_name) learn $(CONFIG.favorite_language) with a focus on $(CONFIG.learning_genre).
 
 [CONTEXT]
-Current Language: \$(CONFIG.favorite_language)
-Current Genre: \$(CONFIG.learning_genre)
-Current Date/Time: \$(Dates.format(now(), "yyyy-mm-dd HH:MM:SS"))
+Current Language: $(CONFIG.favorite_language)
+Current Genre: $(CONFIG.learning_genre)
+Current Date/Time: $(Dates.format(now(), "yyyy-mm-dd HH:MM:SS"))
 
 [INSTRUCTIONS]
 1. Memory: Use [USER FACTS] and [CONVERSATION HISTORY].
-2. Style: \$(CONFIG.teaching_style).
+2. Style: $(CONFIG.teaching_style).
 3. Web Search: If needed, use `SEARCH_WEB: <query>`.
 """
     
@@ -176,8 +117,6 @@ Current Date/Time: \$(Dates.format(now(), "yyyy-mm-dd HH:MM:SS"))
     
     return base_prompt
 end
-
-global GLOBAL_MEMORY = nothing
 
 """
     handle_user_input(user_input::AbstractString, io_in::IO=stdin, io_out::IO=stdout)
@@ -249,23 +188,23 @@ function run_scheduler_wizard(io_in::IO=stdin, io_out::IO=stdout)
     
     # 3. Generate
     start_date = today()
-    println(io_out, YELLOW, "\n⏳ Generating your schedule starting from today (\$start_date)...", RESET)
+    println(io_out, YELLOW, "\n⏳ Generating your schedule starting from today ($start_date)...", RESET)
     
     schedule, final_lang = Scheduler.generate_schedule(lang_input, start_date, days)
     
     # 4. Display Summary
-    println(io_out, GREEN, "\n✅ Plan Generated for \$(uppercase(final_lang))!", RESET)
-    println(io_out, "Total Sessions: \$(length(schedule))")
-    println(io_out, "Estimated Completion: \$(schedule[end].date)")
+    println(io_out, GREEN, "\n✅ Plan Generated for $(uppercase(final_lang))!", RESET)
+    println(io_out, "Total Sessions: $(length(schedule))")
+    println(io_out, "Estimated Completion: $(schedule[end].date)")
     
     # 5. Save
-    filename = "LearningPlan_\$(uppercase(final_lang)).md"
+    filename = "LearningPlan_$(uppercase(final_lang)).md"
     Scheduler.save_schedule_to_file(schedule, final_lang, filename)
-    println(io_out, BOLD, CYAN, "\n💾 Schedule saved to '\$filename'", RESET)
+    println(io_out, BOLD, CYAN, "\n💾 Schedule saved to '$filename'", RESET)
     println(io_out, "Open this file to track your progress!\n")
     
     # Add to memory
-    Memory.add_fact(GLOBAL_MEMORY, "I am following a learning plan for \$final_lang starting \$start_date.")
+    Memory.add_fact(GLOBAL_MEMORY, "I am following a learning plan for $final_lang starting $start_date.")
 end
 
 function process_request(user_input::AbstractString, io_out::IO=stdout)
@@ -276,10 +215,10 @@ function process_request(user_input::AbstractString, io_out::IO=stdout)
     memory_context = Memory.get_memory_context(GLOBAL_MEMORY)
     full_prompt = """
     [MEMORY]
-    \$memory_context
+    $memory_context
     
     [USER INPUT]
-    \$user_input
+    $user_input
     """
     
     try
@@ -307,33 +246,33 @@ function process_request(user_input::AbstractString, io_out::IO=stdout)
         
     catch e
         print(io_out, "\r" * " "^30 * "\r")
-        println(io_out, RED, "Error: Could not connect to Ollama. Ensure it is running at \$(CONFIG.ollama_host)", RESET)
+        println(io_out, RED, "Error: Could not connect to Ollama. Ensure it is running at $(CONFIG.ollama_host)", RESET)
     end
 end
 
 function perform_web_search_and_answer(original_question::AbstractString, search_query::AbstractString, io_out::IO=stdout)
     global GLOBAL_MEMORY
-    println(io_out, SYSTEM_COLOR, "🌐 Searching for: \$search_query...", RESET)
+    println(io_out, SYSTEM_COLOR, "🌐 Searching for: $search_query...", RESET)
     
     try
         results = WebScraping.user_inputs_and_rendering(search_query)
         
         if isempty(results)
             println(io_out, YELLOW, "⚠️ No web results found. Answering from knowledge...", RESET)
-            process_request("Answer this based on your knowledge: \$original_question", io_out)
+            process_request("Answer this based on your knowledge: $original_question", io_out)
             return
         end
 
-        context = join(["Source \$i: \$(r.url)\n\$(r.content[1:min(500, end)])" for (i, r) in enumerate(results)], "\n\n")
+        context = join(["Source $i: $(r.url)\n$(r.content[1:min(500, end)])" for (i, r) in enumerate(results)], "\n\n")
         
         synthesis_prompt = """
         [WEB RESULTS]
-        \$context
+        $context
         
         [QUESTION]
-        \$original_question
+        $original_question
         
-        Answer based on the results above in \$(CONFIG.teaching_style) style.
+        Answer based on the results above in $(CONFIG.teaching_style) style.
         """
         
         final_answer = OllamaClient.generate_completion(synthesis_prompt; 
@@ -348,7 +287,7 @@ function perform_web_search_and_answer(original_question::AbstractString, search
             println(io_out, final_answer)
         end
         println(io_out, CYAN, "\n📚 Sources:", RESET)
-        for r in results println(io_out, "   🔗 \$(r.url)") end
+        for r in results println(io_out, "   🔗 $(r.url)") end
         println(io_out)
         
         Memory.add_interaction(GLOBAL_MEMORY, original_question, final_answer)
@@ -361,11 +300,11 @@ end
 
 function main(io_in::IO=stdin, io_out::IO=stdout)
     if !isfile("config.json")
-        run_first_time_setup() # Note: setup still uses stdin/stdout for simplicity
+        run_first_time_setup()
     end
 
     global GLOBAL_MEMORY = Memory.load_memory()
-    print_header()
+    UI.print_header(CONFIG)
 
     while true
         print(io_out, USER_COLOR, "💬 You: ", RESET)
