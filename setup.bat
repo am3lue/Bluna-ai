@@ -168,7 +168,7 @@ if %errorLevel% equ 0 (
     echo [SUCCESS] Bluna AI installed successfully!
     echo.
     echo To start Bluna AI, run:
-    echo   julia %INSTALL_DIR%\main.jl
+    echo   julia %INSTALL_DIR%\\v2_analyst_release\\main.jl
     echo.
     echo Or use the desktop shortcut: %SHORTCUT%
     echo.

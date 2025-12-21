@@ -311,7 +311,7 @@ EOL
             cat > "$app_bundle/Contents/MacOS/bluna-ai" << EOL
 #!/bin/bash
 cd "$install_dir"
-julia main.jl
+julia ./v2_analyst_release/main.jl
 EOL
             
             chmod +x "$app_bundle/Contents/MacOS/bluna-ai"
@@ -387,12 +387,12 @@ main() {
     
     # Run initial setup
     print_status "Running initial setup..."
-    julia main.jl --setup
+    julia ./v2_analyst_release/main.jl --setup
     
     print_success "Bluna AI installed successfully!"
     echo
     print_status "To start Bluna AI, run:"
-    echo "  julia $install_dir/main.jl"
+    echo "  julia $install_dir/v2_analyst_release/main.jl"
     echo
     if [[ "$os" != "windows" ]]; then
         print_status "Or use the desktop shortcut that was created"
