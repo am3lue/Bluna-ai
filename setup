@@ -295,7 +295,7 @@ Exec=julia "$install_dir/v2_analyst_release/main.jl"
 Terminal=true
 Type=Application
 Categories=Development;
-Icon=$install_dir/../images/Bluna-AI.png
+Icon=$install_dir/images/Bluna-AI.png
 Path=$install_dir
 EOL
             
